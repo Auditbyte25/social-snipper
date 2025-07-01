@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "test": "server.test.js",
-    "start": "nodemon --exec ts-node ./src/server.ts",
+    "dev": "nodemon --exec ts-node ./src/server.ts",
+    "start": "node dist/server.js",
     "build": "tsc"
   },
   "author": "jopaleti",
