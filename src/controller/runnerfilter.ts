@@ -69,7 +69,7 @@ const createRunnerFilter = catchAsyncErrors(
 
       res.status(201).json({
         success: true,
-        result: bulkResult,
+        result: getRunnerResponse,
         message: "Runner History Created or Updated Successfully!",
       });
 
