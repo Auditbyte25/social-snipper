@@ -133,5 +133,30 @@ const deleteUser = catchAsyncErrors(
   }
 );
 
+/**
+ *Get user profile
+ * @param {object} req
+ * @param {object} res, all the information about the user
+ * @returns {object} success message
+ */
+const getUserInfo = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user: any = await User.findById((req as any).user.id);
+      if (!user) {
+        return next(
+          new ErrorHandler("User is not available with this id", 400)
+        );
+      } 
+      res.status(201).json({
+        success: true,
+        results: user,
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 500));
+    }
+  }
+);
+
 // Export the functions
-export { connectWallet, updateUserInfo, getAllUsers, deleteUser };
+export { connectWallet, updateUserInfo, getAllUsers, deleteUser, getUserInfo };

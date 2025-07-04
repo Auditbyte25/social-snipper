@@ -15,17 +15,17 @@ dotenv.config({ path: "./src/config/.env" });
 
 // Initiallising app
 const app = express();
-// app.use(cookieParser());
+app.use(cookieParser());
 
+
+// Allow requests from any origin
+// app.use(cors());
 app.use(
   cors({
     origin: true,
     credentials: true,
   })
 );
-
-// Allow requests from any origin
-app.use(cors());
 
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));

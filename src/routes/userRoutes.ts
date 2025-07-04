@@ -4,6 +4,7 @@ import {
   updateUserInfo,
   getAllUsers,
   deleteUser,
+  getUserInfo,
 } from "../controller/user";
 import { isAdmin, isAuthenticated } from "../middleware/auth";
 
@@ -12,6 +13,7 @@ const router = express.Router();
 
 router.post("/connect-wallet", connectWallet);
 router.put("/update-profile", isAuthenticated, updateUserInfo);
+router.get("/get-userprofile", isAuthenticated, getUserInfo);
 router.get("/get-all-users", isAuthenticated, isAdmin("Admin"), getAllUsers);
 router.delete("/delete-user/:id", isAuthenticated, isAdmin("Admin"), deleteUser);
 
