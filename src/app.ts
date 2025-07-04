@@ -15,7 +15,14 @@ dotenv.config({ path: "./src/config/.env" });
 
 // Initiallising app
 const app = express();
-app.use(cookieParser());
+// app.use(cookieParser());
+
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  })
+);
 
 // Allow requests from any origin
 app.use(cors());
