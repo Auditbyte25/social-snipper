@@ -108,6 +108,23 @@ const getAllUsers = catchAsyncErrors(
   }
 );
 
+const disconnectUser = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.cookie("token", null, {
+        expires: new Date(Date.now()),
+        httpOnly: true,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: "Wallet disconnected and token cleared successfully"
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 500));
+    }
+  }
+)
 // Delete user by the admin
 const deleteUser = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -159,4 +176,11 @@ const getUserInfo = catchAsyncErrors(
 );
 
 // Export the functions
-export { connectWallet, updateUserInfo, getAllUsers, deleteUser, getUserInfo };
+export {
+  connectWallet,
+  updateUserInfo,
+  getAllUsers,
+  deleteUser,
+  getUserInfo,
+  disconnectUser,
+};

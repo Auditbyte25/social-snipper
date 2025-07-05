@@ -5,6 +5,7 @@ import {
   getAllUsers,
   deleteUser,
   getUserInfo,
+  disconnectUser,
 } from "../controller/user";
 import { isAdmin, isAuthenticated } from "../middleware/auth";
 
@@ -12,6 +13,7 @@ import { isAdmin, isAuthenticated } from "../middleware/auth";
 const router = express.Router();
 
 router.post("/connect-wallet", connectWallet);
+router.post("/disconnect-wallet", disconnectUser);
 router.put("/update-profile", isAuthenticated, updateUserInfo);
 router.get("/get-userprofile", isAuthenticated, getUserInfo);
 router.get("/get-all-users", isAuthenticated, isAdmin("Admin"), getAllUsers);

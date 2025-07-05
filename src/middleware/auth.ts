@@ -8,8 +8,10 @@ import User from "../model/user";
 const isAuthenticated = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     // Destructuring token from the cookies
-    const { token } = req.cookies;
-    console.log({ token: req.cookies });
+    // const { token } = req.cookies;
+    const { token } = req.body.cookies;
+    // console.log({ token: req.cookies });
+    console.log({ token: req.body.cookies });
     if (!token) {
       return next(new ErrorHandler("Please connect waller to continue", 401));
     }
