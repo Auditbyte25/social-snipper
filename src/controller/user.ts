@@ -114,11 +114,12 @@ const disconnectUser = catchAsyncErrors(
       res.cookie("token", null, {
         expires: new Date(Date.now()),
         httpOnly: true,
+        sameSite: "none",
+        secure: true,
       });
-
-      res.status(200).json({
+      res.status(201).json({
         success: true,
-        message: "Wallet disconnected and token cleared successfully"
+        message: "Log out successful!",
       });
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 500));
