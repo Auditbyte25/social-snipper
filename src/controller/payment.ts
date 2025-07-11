@@ -1,64 +1,64 @@
-import { Request, Response, NextFunction } from "express";
-import ErrorHandler from "../utils/ErrorHandler";
-import catchAsyncErrors from "../middleware/catchAsyncErrors";
-import {
-  Connection,
-  Transaction,
-  SystemProgram,
-  PublicKey,
-  Keypair,
-} from "@solana/web3.js";
-import bs58 from "bs58";
+// import { Request, Response, NextFunction } from "express";
+// import ErrorHandler from "../utils/ErrorHandler";
+// import catchAsyncErrors from "../middleware/catchAsyncErrors";
+// import {
+//   Connection,
+//   Transaction,
+//   SystemProgram,
+//   PublicKey,
+//   Keypair,
+// } from "@solana/web3.js";
+// import bs58 from "bs58";
 
-const paymentPlan = catchAsyncErrors(
-  async (req: Request, res: Response, next: NextFunction) => {
-        try {
-        // plan should be basic or pro
-      const { userPublicKey, plan } = req.body;
-      const userPubKey = new PublicKey(userPublicKey);
+// const paymentPlan = catchAsyncErrors(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//         try {
+//         // plan should be basic or pro
+//       const { userPublicKey, plan } = req.body;
+//       const userPubKey = new PublicKey(userPublicKey);
       
-      // Generate a new keypair (do this ONCE and save the secret key securely)
-      // const OwnerWallet = Keypair.generate();
+//       // Generate a new keypair (do this ONCE and save the secret key securely)
+//       // const OwnerWallet = Keypair.generate();
 
-      // Replace with your exported Phantom private key string
-      const privateKeyBase58Encoded =
-        "2aCrKHCuR5Ni4cuJAvJDYkj784Fwy776twZMRLKJ5KXc18pi5bnD5VUT1nSefpb8yzbQkFB63FbjPBfVRpL2i8Gi"; // from Phantom export
-      const privateKeyBytes = bs58.decode(privateKeyBase58Encoded); // Uint8Array(64)
+//       // Replace with your exported Phantom private key string
+//       const privateKeyBase58Encoded =
+//         "2aCrKHCuR5Ni4cuJAvJDYkj784Fwy776twZMRLKJ5KXc18pi5bnD5VUT1nSefpb8yzbQkFB63FbjPBfVRpL2i8Gi"; // from Phantom export
+//       const privateKeyBytes = bs58.decode(privateKeyBase58Encoded); // Uint8Array(64)
 
-      // Create the Keypair
-      const OwnerWallet = Keypair.fromSecretKey(privateKeyBytes);
+//       // Create the Keypair
+//       const OwnerWallet = Keypair.fromSecretKey(privateKeyBytes);
 
-      const connection = new Connection("https://api.devnet.solana.com");
-      const latestBlockhash = await connection.getLatestBlockhash();
+//       const connection = new Connection("https://api.devnet.solana.com");
+//       const latestBlockhash = await connection.getLatestBlockhash();
 
-      const reward = 1_000_000_000; // 1 SOL (example)
-      const _pretx = new Transaction().add(
-        SystemProgram.transfer({
-          fromPubkey: OwnerWallet.publicKey, // OwnerWallet is your backend wallet
-          toPubkey: userPubKey,
-          lamports: reward,
-        })
-      );
-      _pretx.setSigners(userPubKey, OwnerWallet.publicKey);
-      _pretx.recentBlockhash = latestBlockhash.blockhash;
-      _pretx.partialSign(OwnerWallet);
+//       const reward = 1_000_000_000; // 1 SOL (example)
+//       const _pretx = new Transaction().add(
+//         SystemProgram.transfer({
+//           fromPubkey: OwnerWallet.publicKey, // OwnerWallet is your backend wallet
+//           toPubkey: userPubKey,
+//           lamports: reward,
+//         })
+//       );
+//       _pretx.setSigners(userPubKey, OwnerWallet.publicKey);
+//       _pretx.recentBlockhash = latestBlockhash.blockhash;
+//       _pretx.partialSign(OwnerWallet);
 
-      const _tx = _pretx.serialize({
-        requireAllSignatures: false,
-        verifySignatures: false,
-      });
-      // console.log({ tx: Buffer.from(_tx).toString("base64") });
-      res.status(201).json({
-        success: true,
-        tx: Buffer.from(_tx).toString("base64"),
-      });
-    } catch (error: any) {
-      return next(new ErrorHandler(error.message, 500));
-    }
-  }
-);
+//       const _tx = _pretx.serialize({
+//         requireAllSignatures: false,
+//         verifySignatures: false,
+//       });
+//       // console.log({ tx: Buffer.from(_tx).toString("base64") });
+//       res.status(201).json({
+//         success: true,
+//         tx: Buffer.from(_tx).toString("base64"),
+//       });
+//     } catch (error: any) {
+//       return next(new ErrorHandler(error.message, 500));
+//     }
+//   }
+// );
 
-export { paymentPlan };
+// export { paymentPlan };
 
 
 // const {
