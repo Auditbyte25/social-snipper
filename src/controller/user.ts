@@ -25,16 +25,18 @@ const connectWallet = catchAsyncErrors(
       if (!user) {
         user = await User.create({ publicKey: publicKey });
         console.log(user);
-        sendToken(user, 201, res);
+        let token: any = sendToken(user, 201, res);
         return res.status(201).json({
           success: true,
+          token: token,
           message: "Account connected successfully!",
         });
       }
 
-      sendToken(user, 201, res);
+      let token: any = sendToken(user, 201, res);
       res.status(201).json({
         success: true,
+        token: token,
         message: "Account connected already!",
       });
     } catch (error: any) {
