@@ -5,6 +5,6 @@ import { isAdmin, isAuthenticated } from "../middleware/auth";
 // Initallizing the router
 const router = express.Router();
 
-router.get("/getTwitterTarget", isAuthenticated, getTwitterTarget);
+router.post("/getTwitterTarget", isAuthenticated, getTwitterTarget);
 
 export default router;
