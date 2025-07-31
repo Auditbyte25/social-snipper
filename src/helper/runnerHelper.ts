@@ -58,7 +58,15 @@ async function processTweets(
   min_replies: number,
   min_faves: number,
   min_retweets: number
-) {
+): Promise<
+  | {
+      trendingWords: string[];
+      tweetImpression: string[];
+      tweetMention: string[];
+      tweetIds: string[];
+    }
+  | undefined
+> {
   const tweets = await fetchTweets(
     startDate,
     endDate,
@@ -69,23 +77,37 @@ async function processTweets(
   if (!tweets) return;
 
   const trendingWords: string[] = [];
+  const tweetImpression: string[] = [];
+  // Username of the person that tweet
+  const tweetMention: string[] = [];
+  const tweetIds: string[] = [];
 
   const results = tweets.timeline.map((tweet: any) => {
     // const words = extractTrendingWords(tweet.text);
     // const words = getMostUniqueNouns(tweet.text);
     // trendingWords.push(...words);
     trendingWords.push(tweet.text);
+    tweetImpression.push(tweet.views);
+    tweetMention.push(tweet.user_info.screen_name);
+    tweetIds.push(tweet.tweet_id);
     // return { text: tweet.text, extractedWords: words };
   });
 
   // return getTopTrendingWords(trendingWords, 10);
-  return trendingWords;
+  // return trendingWords;
+  return {
+    trendingWords,
+    tweetImpression,
+    tweetMention,
+    tweetIds,
+  };
 }
 
 //------------LIMIT OF TOKENS = 10 AND ADDING DELAY = 1SECONDS BECAUSE OF FREE PLAN--------------//
 async function runnerFilter(
   startDate: any,
   endDate: any,
+  engagement_score: any,
   min_replies: number,
   min_faves: number,
   min_retweets: number,
@@ -100,15 +122,37 @@ async function runnerFilter(
   let MEMES: MEME[] = [];
 
   // Get and capture list of trending words says maximum of 10...
-  const trendingWords: any = await processTweets(
-    startDate,
-    endDate,
-    min_replies,
-    min_faves,
-    min_retweets
-  );
-
+  // const trendingWords: any = await processTweets(
+  //   startDate,
+  //   endDate,
+  //   min_replies,
+  //   min_faves,
+  //   min_retweets
+  // );
+  const { trendingWords, tweetImpression, tweetMention, tweetIds } =
+    (await processTweets(
+      startDate,
+      endDate,
+      min_replies,
+      min_faves,
+      min_retweets
+    )) || { trendingWords: [], tweetImpression: [], tweetMention: [], tweetIds: [] };
+  // Check for the array mismatch
+    if (
+      !trendingWords ||
+      !tweetImpression ||
+      trendingWords.length != tweetImpression.length
+    ) {
+      console.error(
+        "❌ Length mismatch: trendingWords and tweetImpression must be equal"
+      );
+      return null;
+    }
+  // console.log(trendingWords);
   for (let i = 0; i < Math.min(trendingWords?.length || 0, 2); i++) {
+    var impressions: any = tweetImpression[i];
+    var tweetMentioned: any = tweetMention[i];
+    var tweetId: any = tweetIds[i];
     try {
       const memeResponse: any = await searchTokensRunner(
         trendingWords[i],
@@ -117,8 +161,8 @@ async function runnerFilter(
         sell_ratio,
         max_market_cap
       );
+      // console.log({ memeResponse: memeResponse });
       for (const token of memeResponse) {
-
         // Conditional check before pushing to MEMES
         if (
           (token.liquidityUsd != null &&
@@ -135,15 +179,21 @@ async function runnerFilter(
           tokenHolder: token.holders,
           buynsellRatio: buy_ratio / sell_ratio,
           rugCheck: "",
-          mentions: "",
+          mentions: tweetMentioned,
           currentPrice: token.priceUsd,
+          volume24h: token.volume_24h,
+          engagementScore: engagement_score,
+          hashtagReach: impressions,
+          tweetId: tweetId,
         };
 
         MEMES.push(passedMEME);
+        // -------ADDING DELAY--------//
+        await delay(1000); // wait 1 second between requests
       }
       // console.log(MEMES);
       // -------ADDING DELAY--------//
-      await delay(1000); // wait 1.5 seconds between requests
+      // await delay(1000); // wait 1.5 seconds between requests
     } catch (error: any) {
       console.error("Error fetching tweets:", error);
       return null;
@@ -157,10 +207,11 @@ async function runnerFilter(
 // (async () => {
 //   const startDate = "2024-06-01";
 //   const endDate = "2024-06-15";
+//   const engagement_score = 50;
 //   const min_replies = 5;
 //   const min_faves = 10;
 //   const min_retweets = 3;
-//   const liquidity_locked = 10000; // in USD
+//   const liquidity_locked = 0; // in USD
 //   const min_market_cap = 50000; // in USD
 //   const max_market_cap = 100000; // in USD
 //   const buy_ratio = 120; // Buy/sell ratio
@@ -170,6 +221,7 @@ async function runnerFilter(
 //   const result = await runnerFilter(
 //     startDate,
 //     endDate,
+//     engagement_score,
 //     min_replies,
 //     min_faves,
 //     min_retweets,

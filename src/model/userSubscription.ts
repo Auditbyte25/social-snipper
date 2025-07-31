@@ -2,7 +2,7 @@ import mongoose, { Document, Schema, Types } from "mongoose";
 
 export interface IReferredUser {
   userId: Types.ObjectId;
-  plan: "basic" | "pro";
+  plan: "basic" | "pro" | null;
   subscribedAt: Date;
 }
 
@@ -57,7 +57,6 @@ const userSubscriptionSchema: Schema = new Schema(
     },
     referralCode: {
       type: String,
-      required: true,
       unique: true,
     },
     referredBy: {

@@ -6,6 +6,7 @@ import {
   deleteUser,
   getUserInfo,
   disconnectUser,
+  createReferralCode,
 } from "../controller/user";
 import { isAdmin, isAuthenticated } from "../middleware/auth";
 
@@ -14,6 +15,7 @@ const router = express.Router();
 
 router.post("/connect-wallet", connectWallet);
 router.post("/disconnect-wallet", disconnectUser);
+router.post("/create-referralcode", isAuthenticated, createReferralCode);
 router.put("/update-profile", isAuthenticated, updateUserInfo);
 router.get("/get-userprofile", isAuthenticated, getUserInfo);
 router.get("/get-all-users", isAuthenticated, isAdmin("Admin"), getAllUsers);

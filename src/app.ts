@@ -9,6 +9,8 @@ import errorMiddleWare from "./middleware/error";
 import userRouter from "./routes/userRoutes";
 import runnerHistoryRouter from "./routes/runnerHistory";
 import twitterRouter from "./routes/twitterRoutes";
+import paymentRouter from "./routes/paymentRoutes";
+import botRouter from "./routes/botRoutes";
 
 // config the dotenv
 dotenv.config({ path: "./src/config/.env" });
@@ -16,7 +18,6 @@ dotenv.config({ path: "./src/config/.env" });
 // Initiallising app
 const app = express();
 app.use(cookieParser());
-
 
 // Allow requests from any origin
 // app.use(cors());
@@ -61,6 +62,8 @@ app.use(errorMiddleWare);
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/runnerhistory", runnerHistoryRouter);
 app.use("/api/v1/twittertarget", twitterRouter);
+app.use("/api/v1/payment", paymentRouter);
+app.use("/api/v1/bot", botRouter);
 
 // export app
 export default app;

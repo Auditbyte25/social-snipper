@@ -19,6 +19,7 @@ const createRunnerFilter = catchAsyncErrors(
         (await runnerFilter(
           req.body.startdate,
           req.body.endDate,
+          req.body.engagement_score,
           min_replies,
           min_faves,
           min_retweets,
@@ -58,6 +59,10 @@ const createRunnerFilter = catchAsyncErrors(
               buynsellRatio: meme.buynsellRatio,
               rugCheck: meme.rugCheck,
               mentions: meme.mentions,
+              volume24h: meme.volume24h,
+              engagementScore: meme.engagementScore,
+              hashtagReach: meme.hashtagReach,
+              tweetId: meme.tweetId,
             },
           },
           upsert: true,

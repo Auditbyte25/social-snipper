@@ -5,12 +5,17 @@ import {
   deleteAllRunnerHistory,
 } from "../controller/runnerfilter";
 import { isAdmin, isAuthenticated } from "../middleware/auth";
-// import 
+import { checkSubscription } from "../middleware/checkSubscription";
 
 // Initallizing the router
 const router = express.Router();
 
-router.post("/create-runnerHistory", isAuthenticated, createRunnerFilter);
+// After isAuthenticated, we can check the subscription:::checkSubscription("basic"),
+router.post(
+  "/create-runnerHistory",
+  isAuthenticated,
+  createRunnerFilter
+);
 
 // The id is userId and user the id passed from isAuthenticated
 router.get("/get-runnerHistory", isAuthenticated, getAllRunnerHistory);

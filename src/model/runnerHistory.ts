@@ -11,6 +11,10 @@ interface IRunnerHistory extends Document {
   buynsellRatio: number;
   rugCheck: string;
   mentions: string;
+  volume24h: number;
+  engagementScore: number;
+  hashtagReach: number;
+  tweetId: string;
 }
 
 const runnerHistorySchema: Schema = new Schema(
@@ -45,6 +49,18 @@ const runnerHistorySchema: Schema = new Schema(
       type: String,
     },
     mentions: {
+      type: String,
+    },
+    volume24h: {
+      type: Number,
+    },
+    engagementScore: {
+      type: Number,
+    },
+    hashtagReach: {
+      type: Number,
+    },
+    tweetId: {
       type: String,
     },
   },

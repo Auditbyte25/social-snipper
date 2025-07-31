@@ -16,6 +16,10 @@ export type MEME = {
   rugCheck?: string;
   mentions?: string;
   currentPrice?: number;
+  volume24h?: number;
+  engagementScore?: number;
+  hashtagReach?: number;
+  tweetId?: string; // Array of usernames
 };
 
 export interface userModel extends Document {

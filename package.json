@@ -12,6 +12,7 @@
   "author": "jopaleti",
   "license": "MIT",
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/body-parser": "^1.19.5",
     "@types/bs58": "^5.0.0",
@@ -30,12 +31,15 @@
   "dependencies": {
     "@cryptoscan/pumpfun-sdk": "^0.0.8",
     "@devil7softwares/pos": "^1.0.2",
+    "@raydium-io/raydium-sdk-v2": "^0.2.6-alpha",
     "@solana-program/system": "^0.7.0",
+    "@solana-program/token-2022": "^0.4.2",
     "@solana-tracker/data-api": "^0.0.5",
     "@solana/kit": "^2.3.0",
     "@solana/spl-token": "^0.4.13",
     "@solana/web3.js": "^1.98.2",
     "axios": "^1.8.3",
+    "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
     "body-parser": "^1.20.3",
     "bs58": "^5.0.0",

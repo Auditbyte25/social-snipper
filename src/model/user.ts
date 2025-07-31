@@ -1,4 +1,4 @@
-import mongoose, { Schema} from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import { NextFunction } from "express";
 import { userModel } from "../types/types";
@@ -28,6 +28,18 @@ const userSchema: Schema = new Schema({
   createdAt: {
     type: Date,
     default: Date.now(),
+  },
+  referredBy: {
+    type: String,
+    default: null,
+  },
+  referralReward: {
+    type: Number,
+    default: 0,
+  },
+  referralCode: {
+    type: Number,
+    unique: true,
   },
 });
 

@@ -12,6 +12,11 @@ cloudinary.config({
   api_secret: process.env.cloudinary_secret_key,
 });
 
+// Helper to generate a random 6-digit number
+const generateReferralCode = (): string => {
+  return Math.floor(100000 + Math.random() * 900000).toString(); // e.g., "492781"
+};
+
 // Create user
 const connectWallet = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -45,6 +50,54 @@ const connectWallet = catchAsyncErrors(
   }
 );
 
+// create referral id
+const createReferralCode = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = (req as any).user?._id;
+      if (!userId) {
+        return next(new ErrorHandler("User not authenticated", 401));
+      }
+
+      const user = await User.findById(userId);
+      if (!user) {
+        return next(new ErrorHandler("User not found", 404));
+      }
+
+      // Return existing referral code if already present
+      if (user.referralCode) {
+        return res.status(200).json({
+          success: true,
+          referralCode: user.referralCode,
+          message: "Referral code already exists",
+        });
+      }
+
+      // Generate a new random numeric referral code
+      let referralCode: any;
+      let exists = true;
+
+      // Ensure referralCode is unique
+      while (exists) {
+        referralCode = generateReferralCode();
+        const codeCheck = await User.findOne({ referralCode });
+        exists = !!codeCheck;
+      }
+
+      user.referralCode = referralCode;
+      await user.save();
+
+      res.status(201).json({
+        success: true,
+        referralCode,
+        message: "Referral code created successfully",
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
+    }
+  }
+);
+
 /**
  *Update user profile
  * @param {object} req, username, profilePicture
@@ -60,7 +113,7 @@ const updateUserInfo = catchAsyncErrors(
         return next(new ErrorHandler("Connect wallet first", 403));
       }
       const user: any = await User.findById((req as any).user.id);
-      
+
       if (existedUser.id != user.id)
         return next(new ErrorHandler("Wallet not match the userId", 403));
 
@@ -127,7 +180,7 @@ const disconnectUser = catchAsyncErrors(
       return next(new ErrorHandler(error.message, 500));
     }
   }
-)
+);
 // Delete user by the admin
 const deleteUser = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -167,7 +220,7 @@ const getUserInfo = catchAsyncErrors(
         return next(
           new ErrorHandler("User is not available with this id", 400)
         );
-      } 
+      }
       res.status(201).json({
         success: true,
         results: user,
@@ -186,4 +239,5 @@ export {
   deleteUser,
   getUserInfo,
   disconnectUser,
+  createReferralCode,
 };
