@@ -20,32 +20,32 @@ const app = express();
 app.use(cookieParser());
 
 // Allow requests from any origin
-// app.use(cors());
+app.use(cors());
 // app.use(
 //   cors({
 //     origin: true,
 //     credentials: true,
 //   })
 // );
-const allowedOrigins = [
-  "http://localhost:5500",
-  "https://social-sniper.vercel.app",
-];
+// const allowedOrigins = [
+//   "http://localhost:5500",
+//   "https://social-sniper.vercel.app",
+// ];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+// app.use(
+//   cors({
+//     origin: function (origin, callback) {
+//       if (!origin || allowedOrigins.includes(origin)) {
+//         callback(null, true);
+//       } else {
+//         callback(new Error("Not allowed by CORS"));
+//       }
+//     },
+//     credentials: true,
+//     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+//     allowedHeaders: ["Content-Type", "Authorization"],
+//   })
+// );
 
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
