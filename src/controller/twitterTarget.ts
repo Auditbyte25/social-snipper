@@ -444,7 +444,8 @@ function countRecentTweets(tweets: any[]): number {
 // TWITTERTARGET GENERATOR FUNCTION
 const twitterTarget = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
-    const user: any = await fetchUserTimeline(req.body.username);
+    // const user: any = await fetchUserTimeline(req.body.username);
+    const user: any = await fetchUserTimeline(req.body.twitterUsername);
     const {twitterUsername, buyAmount, takeProfit, stopLoss, autoBuy} = req.body;
     // Fetch user's tweet if user exist
     try {
@@ -455,7 +456,7 @@ const twitterTarget = catchAsyncErrors(
         });
       }
       console.log(user);
-      const userId: any = await User.findById(req.params.id);
+      const userId: any = await User.findById((req as any).user._id);
       if (!userId) {
         return next(
           new ErrorHandler("User is not available with this id", 400)
