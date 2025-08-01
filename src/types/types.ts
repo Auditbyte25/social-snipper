@@ -15,11 +15,15 @@ export type MEME = {
   buynsellRatio?: number;
   rugCheck?: string;
   mentions?: string;
+  mention24h?: number;
   currentPrice?: number;
+  tweetSource?: string;
   volume24h?: number;
   engagementScore?: number;
   hashtagReach?: number;
   tweetId?: string; // Array of usernames
+  time?: number; // Timestamp in minutes
+  tokenDrop?: string;
 };
 
 export interface userModel extends Document {
