@@ -1,5 +1,10 @@
 import express from "express";
-import { getTwitterTarget } from "../controller/twitterTarget";
+import {
+  getTwitterTarget,
+  twitterTarget,
+  getAllTwitterTargets,
+  deleteTwitterTargetByUsername,
+} from "../controller/twitterTarget";
 import { isAdmin, isAuthenticated } from "../middleware/auth";
 import { checkSubscription } from "../middleware/checkSubscription";
 
@@ -12,5 +17,8 @@ router.post(
   isAuthenticated,
   getTwitterTarget
 );
+router.post("/twitterTarget", isAuthenticated, twitterTarget);
+router.get("/getAllTargets", isAuthenticated, getAllTwitterTargets);
+router.delete("/deleteTarget", isAuthenticated, deleteTwitterTargetByUsername);
 
 export default router;

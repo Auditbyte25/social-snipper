@@ -125,7 +125,7 @@ const getAllRunnerHistory = catchAsyncErrors(
       });
       res.status(201).json({
         success: true,
-        runnerHistory,
+        result: runnerHistory,
       });
     } catch (error: any) {
       return next(new ErrorHandler(error, 400));

@@ -6,6 +6,9 @@ import { processTwitterUser } from "../helper/twitterHelper";
 import { fetchUserTweet } from "../fetch/twitterFetch";
 import { MEME } from "../types/types";
 import { searchTokens } from "../fetch/fetch";
+import { fetchUserTimeline } from "../fetch/twitterFetch";
+import User from "../model/user";
+import TwitterTarget from "../model/twitterTarget";
 
 function extractTokenAndCA(tweet: any) {
   const tokenMatch = tweet.text.match(/\$(\w+)/);
@@ -143,6 +146,148 @@ const getTwitterTarget = catchAsyncErrors(
     }
   }
 );
+// FUNCTION TO COUNT RECENT TWEETS MENTIONS
+function countRecentTweets(tweets: any[]): number {
+  const now = new Date();
+  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  let count = 0;
+
+  for (const tweet of tweets) {
+    const tweetDate = new Date(tweet.created_at);
+    if (tweetDate >= twentyFourHoursAgo && tweetDate <= now) {
+      count += tweet.entities?.user_mentions?.length || 0;
+    }
+  }
+
+  return count;
+}
+
+// TWITTERTARGET GENERATOR FUNCTION
+const twitterTarget = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const user: any = await fetchUserTimeline(req.body.username);
+    const {twitterUsername, buyAmount, takeProfit, stopLoss, autoBuy} = req.body;
+    // Fetch user's tweet if user exist
+    try {
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          msg: "User doesn't match the expectation...",
+        });
+      }
+      console.log(user);
+      const userId: any = await User.findById(req.params.id);
+      if (!userId) {
+        return next(
+          new ErrorHandler("User is not available with this id", 400)
+        );
+      }
+      // const isTwitterTargetExist = await TwitterTarget.findOne({ userId: userId._id });
+      // Converting time of the last activity to minutes of the day
+      const date = new Date(user.timeline[0].created_at);
+      const minutesOfDay = date.getUTCHours() * 60 + date.getUTCMinutes();
+      // Now get the user mentions
+      const mentionsCount: any = countRecentTweets(user.timeline);
+
+      // CHECK IF TwitterTarget EXISTS FOR THE USERID AND twitterUsername
+      const existingTarget = await TwitterTarget.findOne({
+        userId: userId._id,
+        twitterUsername: twitterUsername,
+      });
+      let twitterTarget;
+      if (existingTarget) {
+        // ✅ Update existing TwitterTarget
+        existingTarget.mentionHour = mentionsCount;
+        existingTarget.followers = user.user.sub_count;
+        existingTarget.lastActivity = minutesOfDay;
+        existingTarget.autoBuy = autoBuy;
+        existingTarget.buyAmount = buyAmount;
+        existingTarget.stopLoss = stopLoss;
+        existingTarget.takeProfit = takeProfit;
+        existingTarget.status = user.user.status;
+
+        twitterTarget = await existingTarget.save();
+      } else {
+        // ➕ Create new TwitterTarget
+        twitterTarget = await TwitterTarget.create({
+          userId: userId._id,
+          twitterUsername: twitterUsername,
+          mentionHour: mentionsCount,
+          followers: user.user.sub_count,
+          lastActivity: minutesOfDay,
+          autoBuy: autoBuy,
+          buyAmount: buyAmount,
+          stopLoss: stopLoss,
+          takeProfit: takeProfit,
+          status: user.user.status,
+        });
+      }
+      return res.status(existingTarget ? 200 : 201).json({
+        success: true,
+        result: twitterTarget,
+        message: existingTarget
+          ? "Twitter target updated successfully!"
+          : "New twitter target added successfully!",
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 500));
+    }
+  }
+);
+
+// Get all TwitterTarget entries created by a specific user
+const getAllTwitterTargets = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const twitterTargets = await TwitterTarget.find({
+        userId: (req as any).user._id,
+      });
+
+      res.status(200).json({
+        success: true,
+        result: twitterTargets,
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
+    }
+  }
+);
+
+// Delete a specific TwitterTarget by ID
+const deleteTwitterTargetByUsername = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const twitterTarget = await TwitterTarget.findOneAndDelete({
+        twitterUsername: req.params.twitterUsername,
+        userId: (req as any).user._id, // Ensures the user owns the target
+      });
+
+      if (!twitterTarget) {
+        return next(
+          new ErrorHandler("Twitter target not found or access denied", 404)
+        );
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Twitter target deleted successfully",
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 400));
+    }
+  }
+);
+
+
+// async function main() {
+//   const data = await fetchUserTimeline("elonmusk");
+//   console.log(data.timeline[0]);
+//   const date = new Date(data.timeline[0].created_at);
+//   const minutesOfDay = date.getUTCHours() * 60 + date.getUTCMinutes();
+//   console.log("Minutes into the day:", minutesOfDay);
+//   console.log("User Mentions in the last 24 hours:", countRecentTweets(data.timeline));
+// }
+// main();
 
 // -------- Testing Data for Getting Twitter Target... ----------- //
 
@@ -253,4 +398,9 @@ const getTwitterTarget = catchAsyncErrors(
 //   }
 // })();
 
-export { getTwitterTarget };
+export {
+  getTwitterTarget,
+  twitterTarget,
+  getAllTwitterTargets,
+  deleteTwitterTargetByUsername,
+};

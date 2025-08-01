@@ -161,7 +161,7 @@ async function runnerFilter(
         sell_ratio,
         max_market_cap
       );
-      // console.log({ memeResponse: memeResponse });
+      console.log({ memeResponse: memeResponse });
       for (const token of memeResponse) {
         // Conditional check before pushing to MEMES
         if (

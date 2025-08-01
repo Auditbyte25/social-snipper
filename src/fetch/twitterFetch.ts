@@ -24,6 +24,28 @@ async function fetchTwitterUser(username: string) {
   }
 }
 
+async function fetchUserTimeline(screenname: string) {
+  const options: AxiosRequestConfig = {
+    method: "GET",
+    url: "https://twitter-api45.p.rapidapi.com/timeline.php",
+    params: {
+      screenname,
+    },
+    headers: {
+      "x-rapidapi-key": "6df1fee834msh246a434b012aa0dp1d1f9fjsne02c45376812",
+      "x-rapidapi-host": "twitter-api45.p.rapidapi.com",
+    },
+  };
+
+  try {
+    const response = await axios.request(options);
+    return response.data;
+  } catch (error: any) {
+    console.error("Error fetching user timeline:", error.message);
+    return { status: 500, msg: error.message };
+  }
+}
+
 const cache = { data: null, timestamp: 0 };
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
@@ -78,4 +100,4 @@ async function fetchUserTweet(
 // }
 // main();
 
-export {fetchTwitterUser, fetchUserTweet}
+export {fetchTwitterUser, fetchUserTweet, fetchUserTimeline}
