@@ -96,6 +96,57 @@ const searchTokens = async (query: string) => {
   }
 };
 
+// Get token information: GET /tokens/{tokenAddress}
+const getTokenInfo = async (tokenAddress: string) => {
+  try {
+    const response = await axios.get(
+      `https://data.solanatracker.io/tokens/${tokenAddress}`,
+      {
+        headers: {
+          "x-api-key": API_KEY,
+        },
+      }
+    );
+
+    const tokenInfo = response.data;
+    // console.log("Token Info:", tokenInfo.pools[0].price.usd);
+    return tokenInfo;
+  } catch (error: any) {
+    console.error("API Error:", error.response?.data || error.message);
+  }
+};
+
+// Get call for token swap
+const swapTokens = async (
+  from: string,
+  to: string,
+  fromAmount: number,
+  slippage: number,
+  payer: string
+) => {
+  try {
+    const response = await axios.get("https://swap-v2.solanatracker.io/swap", {
+      params: {
+        from,
+        to,
+        fromAmount,
+        slippage,
+        payer,
+      },
+    });
+
+    const swapData = response.data;
+    if (!swapData) {
+      console.log("No swap data found.");
+      return;
+    }
+
+    return swapData;
+  } catch (error: any) {
+    console.error("API Error:", error.response?.data || error.message);
+  }
+};
+
 const searchTokensRunner = async (
   query: string,
   minMarketCap: number,
@@ -139,7 +190,17 @@ export {
   getLiquidityStat,
   searchTokens,
   searchTokensRunner,
+  getTokenInfo,
+  swapTokens,
 };
 
 // Example usage
-searchTokens('bonk');
+// searchTokens('bonk');
+// getTokenInfo("6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN");
+// swapTokens(
+//   "So11111111111111111111111111111111111111112",
+//   "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R",
+//   1,
+//   10,
+//   "GKwt8YJj28L9vBukuiRQkV2Lm9T51Ua9mDb5VUoycWK4"
+// );

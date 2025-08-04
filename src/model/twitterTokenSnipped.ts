@@ -4,10 +4,12 @@ import mongoose, { Document, Schema, Types } from "mongoose";
 export interface TwitterTokenSnippedInterface extends Document {
   userId: Types.ObjectId;
   tokenName: string;
+  tokenAddress: string;
   tweetSource: string;
   time: number;
   engagementScore: number;
   mentions: number;
+  tokenPrice: number;
   tokenDrop: string;
   createdAt: Date;
 }
@@ -22,6 +24,9 @@ const twitterTokenSnippedSchema: Schema = new Schema({
     type: String,
     required: [true, "Token name is required"],
   },
+  tokenAddress: {
+    type: String,
+  },
   tweetSource: {
     type: String,
     required: [true, "Tweet source is required"],
@@ -33,6 +38,9 @@ const twitterTokenSnippedSchema: Schema = new Schema({
     type: Number,
   },
   mentions: {
+    type: Number,
+  },
+  tokenPrice: {
     type: Number,
   },
   tokenDrop: {

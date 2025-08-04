@@ -18,6 +18,70 @@ const PLAN: any = {
   basic: { amount: 25 },
   pro: { amount: 50 },
 };
+
+// SUBSCRIPTION PLAN
+const subscriptionPlan = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // plan should be basic or pro
+      const { signature, plan, referralCode } = req.body;
+
+      // Check whether user has subscribed before
+      const user: any = await User.findById((req as any).user.id);
+      let isUserSubscribed: any = await UserSubscription.findOne({
+        userId: (req as any).user.id,
+      });
+      if (!isUserSubscribed) {
+        isUserSubscribed = await UserSubscription.create({
+          userId: (req as any).user.id,
+          solanaAddress: user.publicKey,
+          currentPlan: plan,
+          subscribedAt: new Date(),
+          subscriptionTx: signature,
+        });
+      }
+
+      // Perform upgrade
+      isUserSubscribed.currentPlan = plan;
+      isUserSubscribed.solanaAddress = user.publicKey;
+      isUserSubscribed.subscribedAt = new Date();
+      isUserSubscribed.subscriptionTx = signature;
+      // await isUserSubscribed.save();
+
+      // STEP 1: Handle Referral Logic
+      if (referralCode && user.referredBy === null) {
+        console.log("referrrel")
+        const referrer: any = await User.findOne({ referralCode });
+        if (referrer && user.referredBy === null) {
+          // Only allow referral setting if user hasn't already been referred
+          // STEP 2: Update subscriber’s user record
+          user.referredBy = referrer._id;
+          user.referralReward = 0; // subscriber gets no reward
+          await user.save();
+          
+          // Update subscription record
+          isUserSubscribed.referredBy = referrer._id;
+
+          // STEP 3: Update referrer reward
+          const rewardAmount = plan == "basic" ? 5 : plan == "pro" ? 15 : 0;
+          referrer.referralReward += rewardAmount;
+          await referrer.save();
+        }
+      }
+
+      // STEP 4: Save subscription record
+      await isUserSubscribed.save();
+
+      res.status(201).json({
+        success: true,
+        isUserSubscribed,
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 500));
+    }
+  }
+);
+
 const paymentPlan = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     const splToken = await import("@solana/spl-token");
@@ -156,4 +220,4 @@ const paymentPlan = catchAsyncErrors(
   }
 );
 
-export { paymentPlan };
+export { paymentPlan, subscriptionPlan };

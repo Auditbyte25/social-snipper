@@ -21,7 +21,11 @@ router.post(
   getTwitterTarget
 );
 router.get("/getAllTargets", isAuthenticated, getAllTwitterTargets);
-router.delete("/deleteTarget", isAuthenticated, deleteTwitterTargetByUsername);
+router.delete(
+  "/deleteTarget/:twitterUsername",
+  isAuthenticated,
+  deleteTwitterTargetByUsername
+);
 // Token snipper routes
 router.post("/twitterTarget", isAuthenticated, twitterTarget);
 router.post("/snipTwitterTarget", isAuthenticated, snipTwitterTarget);

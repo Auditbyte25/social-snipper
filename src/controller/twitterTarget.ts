@@ -10,6 +10,7 @@ import { fetchUserTimeline } from "../fetch/twitterFetch";
 import User from "../model/user";
 import TwitterTarget from "../model/twitterTarget";
 import TwitterTokenSnipped from "../model/twitterTokenSnipped";
+import { getTokenInfo } from "../fetch/fetch";
 
 function extractTokenAndCA(tweet: any) {
   const tokenMatch = tweet.text.match(/\$(\w+)/);
@@ -157,7 +158,7 @@ const snipTwitterTarget = catchAsyncErrors(
     );
     // MEME LIST
     let MEMES: MEME[] = [];
-    const usernames = req.body.usernames || [];
+    const usernames: any[] = req.body.usernames || [];
     const timestampInMinutes = Math.floor(Date.now() / 60000);
 
     try {
@@ -179,6 +180,7 @@ const snipTwitterTarget = catchAsyncErrors(
             msg: "User doesn't match the expectation...",
           });
         }
+        console.log(`Processing user: ${user}`);
         // Fetch users tweet
         const userTweetsResponse: any = await fetchUserTweet(
           username,
@@ -188,14 +190,30 @@ const snipTwitterTarget = catchAsyncErrors(
           min_faves,
           min_retweets
         );
+
+        console.log(`Fetched tweets for ${userTweetsResponse}`);
+
         const userTweets: any[] = userTweetsResponse.timeline || [];
+        console.log(
+          `User tweets for ${username}:`,
+          userTweets.length,
+          "tweets found."
+        );
         const tokenList: any = userTweets
           .map((tweet: any) => extractTokenAndCA(tweet))
           .filter((result: any) => result !== null);
 
         console.log(`Token list for ${username}:`, tokenList);
         // Loop through the list and capture the token
+
+        // TEMPORARY LIMIT ADD
+        let loopCount = 0; // Counter to track iterations
+        const MAX_LOOPS = 5; // Set your execution limit
+
         for (let i = 0; i < tokenList?.length; i++) {
+          // BREAK ENFORCEMENT
+          if (loopCount >= MAX_LOOPS) break; // Stop loop if limit reached
+
           if (!tokenList[i].token_name && !tokenList[i].ca) {
             continue;
           }
@@ -234,15 +252,21 @@ const snipTwitterTarget = catchAsyncErrors(
               await TwitterTokenSnipped.create({
                 userId: (req as any).user._id,
                 tokenName: token.name,
+                tokenAddress: token.mint,
                 tweetSource: username,
                 time: timestampInMinutes,
                 engagementScore: engagement_score,
                 mentions: req.body.mention ? req.body.mention : 0,
+                tokenPrice: token.priceUsd,
                 tokenDrop: "Not yet",
               });
 
               await delay(1000);
             }
+
+            // INCREMENTING LOOP BREAK COUNT
+            loopCount++; // Increase count after a successful token processing
+
             console.log(MEMES);
           } else if (tokenList[i].ca) {
             const memeResponse: any = await searchTokens(tokenList[i].ca);
@@ -273,15 +297,21 @@ const snipTwitterTarget = catchAsyncErrors(
               await TwitterTokenSnipped.create({
                 userId: (req as any).user._id,
                 tokenName: token.name,
+                tokenAddress: token.mint,
                 tweetSource: username,
                 time: timestampInMinutes,
                 engagementScore: engagement_score,
                 mentions: req.body.mention ? req.body.mention : 0,
+                tokenPrice: token.priceUsd,
                 tokenDrop: "Not yet",
               });
 
               await delay(1000);
             }
+
+            // INCREMENTING LOOP BREAK COUNT
+            loopCount++; // Increase count after a successful token processing
+
             console.log(MEMES);
           }
         }
@@ -369,7 +399,7 @@ const snipTwitterTarget = catchAsyncErrors(
       //       await delay(1000);
       //     }
       //     console.log(MEMES);
-          
+
       //   }
       // }
 
@@ -389,14 +419,14 @@ const snipTwitterTarget = catchAsyncErrors(
 const getAllTwitterTokenSnippedByUserId = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const tokens = await TwitterTokenSnipped.find({
+      const tokens: any = await TwitterTokenSnipped.find({
         userId: (req as any).user._id,
       });
-
-      res.status(200).json({
-        success: true,
-        result: tokens,
-      });
+      
+        res.status(200).json({
+          success: true,
+          result: tokens,
+        });
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 400));
     }
@@ -407,7 +437,7 @@ const getAllTwitterTokenSnippedByUserId = catchAsyncErrors(
 const deleteTwitterTokenSnippedById = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { id } = req.params;
+      const id = req.params.id;
 
       const deletedToken = await TwitterTokenSnipped.findByIdAndDelete(id);
 
@@ -446,7 +476,8 @@ const twitterTarget = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     // const user: any = await fetchUserTimeline(req.body.username);
     const user: any = await fetchUserTimeline(req.body.twitterUsername);
-    const {twitterUsername, buyAmount, takeProfit, stopLoss, autoBuy} = req.body;
+    const { twitterUsername, buyAmount, takeProfit, stopLoss, autoBuy } =
+      req.body;
     // Fetch user's tweet if user exist
     try {
       if (!user) {
@@ -561,7 +592,6 @@ const deleteTwitterTargetByUsername = catchAsyncErrors(
     }
   }
 );
-
 
 // async function main() {
 //   const data = await fetchUserTimeline("elonmusk");
