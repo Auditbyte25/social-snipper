@@ -11,6 +11,7 @@ export interface TwitterTokenSnippedInterface extends Document {
   mentions: number;
   tokenPrice: number;
   tokenDrop: string;
+  buyAmount: number;
   createdAt: Date;
 }
 
@@ -46,6 +47,9 @@ const twitterTokenSnippedSchema: Schema = new Schema({
   tokenDrop: {
     type: String,
     default: "Not yet",
+  },
+  buyAmount: {
+    type: Number
   },
   createdAt: {
     type: Date,

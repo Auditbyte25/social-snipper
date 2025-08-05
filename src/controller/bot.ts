@@ -18,6 +18,13 @@ interface SwapResult {
   error?: any;
 }
 
+interface batchSwapResult {
+  success: boolean;
+  message: string;
+  txns?: string[]; // base64-encoded serialized transactions
+  error?: any;
+}
+
 // Create a connection for the RPC to interact with the blockchain
 const connection = new Connection(
   "https://solana-mainnet.g.alchemy.com/v2/ZUqRVosoLDBhtuOebrhqZSIqy-2G0kUp"
@@ -196,8 +203,71 @@ async function botSwap(
   }
 }
 
-export { setBotWalletConfig, updateBotWalletConfig, botSwap };
+async function batchBotSwap(
+  tokenAddresses: string[], // Accept multiple tokens to swap
+  fromAmount: number,
+  payer: string,
+  slippage: number
+): Promise<batchSwapResult> {
+  const txns: any[] = [];
 
+  try {
+    for (const tokenAddress of tokenAddresses) {
+      const response = await axios.get(
+        "https://swap-v2.solanatracker.io/swap",
+        {
+          params: {
+            from: "So11111111111111111111111111111111111111112",
+            to: tokenAddress,
+            fromAmount,
+            slippage,
+            payer,
+          },
+        }
+      );
+
+      const res = response.data;
+
+      if (res.type !== "legacy") {
+        return {
+          success: false,
+          message: `Transaction type '${res.type}' not supported for batch processing`,
+        };
+      }
+
+      // Validate txn string
+      if (!res.txn) {
+        return {
+          success: false,
+          message: "Swap API did not return a transaction",
+        };
+      }
+
+      // Push base64 serialized legacy txn string to array (frontend will deserialize)
+      txns.push(res.txn);
+    }
+
+    return {
+      success: true,
+      txns,
+      message: "Transactions prepared for wallet signing",
+    };
+  } catch (error: any) {
+    const errMessage = error.response?.data?.error || error.message;
+    console.error(
+      "Error fetching swap:",
+      error.response?.data || error.message
+    );
+
+    return {
+      success: false,
+      message: "Swap failed",
+      error: errMessage,
+    };
+  }
+}
+
+export { setBotWalletConfig, updateBotWalletConfig, botSwap, batchBotSwap };
 
 // async function callBotSwap() {
 //   const tokenAddress = "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R"; // USDC on Solana
@@ -221,3 +291,30 @@ export { setBotWalletConfig, updateBotWalletConfig, botSwap };
 //   console.log("Swap Result:", result);
 // }
 // callBotSwap();
+
+// (async () => {
+//   const tokenAddresses = [
+//     "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R", // RAY
+//   ];
+
+//   const fromAmount = 1; // Swap 1 token
+//   const payer = "Fh2PV3nkcfyxD2XRRK4W9oEtED9QBrpqBa2uDkHmuMUG"; // Replace with your actual payer wallet address
+//   const slippage = 10; // 10%
+
+//   const result = await batchBotSwap(
+//     tokenAddresses,
+//     fromAmount,
+//     payer,
+//     slippage
+//   );
+
+//   if (result.success && result.txns) {
+//     console.log("✅ Transactions prepared for frontend:");
+//     result.txns.forEach((txn, idx) => {
+//       console.log(`Txn ${idx + 1}: ${txn.slice(0, 60)}...`); // Print truncated txn
+//     });
+//     // console.log(result);
+//   } else {
+//     console.error("❌ Error:", result.message, result.error || "");
+//   }
+// })();

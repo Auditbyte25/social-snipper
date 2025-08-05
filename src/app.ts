@@ -11,6 +11,7 @@ import runnerHistoryRouter from "./routes/runnerHistory";
 import twitterRouter from "./routes/twitterRoutes";
 import paymentRouter from "./routes/paymentRoutes";
 import botRouter from "./routes/botRoutes";
+import snipeOverviewRouter from "./routes/snipeOverviewRoutes";
 
 // config the dotenv
 dotenv.config({ path: "./src/config/.env" });
@@ -64,6 +65,7 @@ app.use("/api/v1/runnerhistory", runnerHistoryRouter);
 app.use("/api/v1/twittertarget", twitterRouter);
 app.use("/api/v1/payment", paymentRouter);
 app.use("/api/v1/bot", botRouter);
+app.use("/api/v1/snipeoverview", snipeOverviewRouter);
 
 // export app
 export default app;

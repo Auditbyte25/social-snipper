@@ -1,5 +1,6 @@
 import mongoose, { Document, Schema, Types } from "mongoose";
 import bcrypt from "bcrypt";
+import { encrypt } from "../helper/encryption";
 
 
 // Define the BotConfig TypeScript interface
@@ -50,16 +51,10 @@ const botConfigSchema: Schema = new Schema({
   },
 });
 
-// Hash publicKey and privateKey before saving
+// 🔐 Encrypt privateKey before saving
 botConfigSchema.pre<BotConfigInterface>("save", async function (next) {
-  if (this.isModified("publicKey")) {
-    const salt = await bcrypt.genSalt(10);
-    this.publicKey = await bcrypt.hash(this.publicKey, salt);
-  }
-
   if (this.isModified("privateKey")) {
-    const salt = await bcrypt.genSalt(10);
-    this.privateKey = await bcrypt.hash(this.privateKey, salt);
+    this.privateKey = encrypt(this.privateKey); // ✅ use AES encryption
   }
 
   next();

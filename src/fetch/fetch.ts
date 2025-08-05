@@ -89,7 +89,7 @@ const searchTokens = async (query: string) => {
       console.log("No tokens found.");
       return;
     }
-
+    
     return tokens;
   } catch (error: any) {
     console.error("API Error:", error.response?.data || error.message);
@@ -109,7 +109,12 @@ const getTokenInfo = async (tokenAddress: string) => {
     );
 
     const tokenInfo = response.data;
+    // console.log(tokenInfo);
     // console.log("Token Info:", tokenInfo.pools[0].price.usd);
+    // console.log("Token Info:", tokenInfo.pools[1].price.usd);
+    // console.log("Token Info:", tokenInfo.pools[3].price.usd);
+    // console.log("Token Info:", tokenInfo.risk.rugged);
+    // console.log("Token Info:", tokenInfo.score);
     return tokenInfo;
   } catch (error: any) {
     console.error("API Error:", error.response?.data || error.message);
@@ -140,7 +145,7 @@ const swapTokens = async (
       console.log("No swap data found.");
       return;
     }
-
+    console.log(swapData);
     return swapData;
   } catch (error: any) {
     console.error("API Error:", error.response?.data || error.message);
@@ -184,6 +189,39 @@ const searchTokensRunner = async (
   }
 };
 
+const swapTokensWithPost = async () => {
+  const url = "https://swap-v2.solanatracker.io/swap";
+
+  const payload = {
+    from: "So11111111111111111111111111111111111111112",
+    to: "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R",
+    amount: 1,
+    slippage: 15,
+    payer: "arsc4jbDnzaqcCLByyGo7fg7S2SmcFsWUzQuDtLZh2y",
+    priorityFee: 0.0005,
+    feeType: "add",
+    fee: "arsc4jbDnzaqcCLByyGo7fg7S2SmcFsWUzQuDtLZh2y:0.1",
+  };
+
+  try {
+    const response = await axios.post(url, payload, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const swapData = response.data;
+    if (!swapData) {
+      console.log("No swap data found.");
+      return;
+    }
+
+    return swapData;
+  } catch (error: any) {
+    console.error("API Error:", error.response?.data || error.message);
+  }
+};
+
 export {
   getMemeRequest,
   getTokenHolder,
@@ -195,8 +233,8 @@ export {
 };
 
 // Example usage
-// searchTokens('bonk');
-// getTokenInfo("6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN");
+// searchTokens("bonk");
+getTokenInfo("6p6xgHyF7AeE6TZkSmFsko444wqoP15icUSqi2jfGiPN");
 // swapTokens(
 //   "So11111111111111111111111111111111111111112",
 //   "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R",
@@ -204,3 +242,7 @@ export {
 //   10,
 //   "GKwt8YJj28L9vBukuiRQkV2Lm9T51Ua9mDb5VUoycWK4"
 // );
+// Usage example
+// swapTokensWithPost().then((data) => {
+//   if (data) console.log("Swap Data:", data);
+// });

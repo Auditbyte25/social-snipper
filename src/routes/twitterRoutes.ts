@@ -7,6 +7,7 @@ import {
   snipTwitterTarget,
   getAllTwitterTokenSnippedByUserId,
   deleteTwitterTokenSnippedById,
+  productionSnipTwitterTarget,
 } from "../controller/twitterTarget";
 import { isAdmin, isAuthenticated } from "../middleware/auth";
 import { checkSubscription } from "../middleware/checkSubscription";
@@ -29,6 +30,11 @@ router.delete(
 // Token snipper routes
 router.post("/twitterTarget", isAuthenticated, twitterTarget);
 router.post("/snipTwitterTarget", isAuthenticated, snipTwitterTarget);
+router.post(
+  "/productionSnipTwitterTarget",
+  isAuthenticated,
+  productionSnipTwitterTarget
+);
 router.get(
   "/getAllsnipTarget",
   isAuthenticated,

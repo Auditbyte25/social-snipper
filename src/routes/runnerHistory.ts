@@ -3,6 +3,7 @@ import {
   createRunnerFilter,
   getAllRunnerHistory,
   deleteAllRunnerHistory,
+  buyToken,
 } from "../controller/runnerfilter";
 import { isAdmin, isAuthenticated } from "../middleware/auth";
 import { checkSubscription } from "../middleware/checkSubscription";
@@ -16,6 +17,8 @@ router.post(
   isAuthenticated,
   createRunnerFilter
 );
+// Buy token bot
+router.post("/buyToken/:id", isAuthenticated, buyToken);
 
 // The id is userId and user the id passed from isAuthenticated
 router.get("/get-runnerHistory", isAuthenticated, getAllRunnerHistory);

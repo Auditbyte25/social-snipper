@@ -15,6 +15,13 @@ interface IRunnerHistory extends Document {
   engagementScore: number;
   hashtagReach: number;
   tweetId: string;
+  bought: boolean;
+  buyPrice: number;
+  sellPrice: number;
+  profitnloss: number;
+  rugged: boolean;
+  riskScore: number;
+  buyAmount: number
 }
 
 const runnerHistorySchema: Schema = new Schema(
@@ -63,6 +70,28 @@ const runnerHistorySchema: Schema = new Schema(
     tweetId: {
       type: String,
     },
+    bought: {
+      type: Boolean,
+      default: false,
+    },
+    buyPrice: {
+      type: Number
+    },
+    sellPrice: {
+      type: Number
+    },
+    profitnloss: {
+      type: Number
+    },
+    rugged: {
+      type: Boolean,
+    },
+    riskScore: {
+      type: Number
+    },
+    buyAmount: {
+      type: Number
+    }
   },
   { timestamps: true }
 );

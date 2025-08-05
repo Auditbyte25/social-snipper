@@ -11,6 +11,9 @@ import User from "../model/user";
 import TwitterTarget from "../model/twitterTarget";
 import TwitterTokenSnipped from "../model/twitterTokenSnipped";
 import { getTokenInfo } from "../fetch/fetch";
+import { botSwap } from "./bot";
+import BotConfig from "../model/bot";
+import { decrypt } from "../helper/encryption";
 
 function extractTokenAndCA(tweet: any) {
   const tokenMatch = tweet.text.match(/\$(\w+)/);
@@ -415,6 +418,236 @@ const snipTwitterTarget = catchAsyncErrors(
   }
 );
 
+const productionSnipTwitterTarget = catchAsyncErrors(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // Ensure the user has already pre-set bot configuration before proceeding
+    // AutoBuy checking is not necessary here because only autoBuy user is allowed to call this endpoint
+    const userBotConfiguration: any = await BotConfig.findOne({
+      userId: (req as any).user?._id,
+    });
+
+    if (
+      !userBotConfiguration ||
+      !userBotConfiguration.privateKey ||
+      !userBotConfiguration.publicKey
+    ) {
+      return next(
+        new ErrorHandler(
+          "User is not allowed to execute this function because there is incomplete or incorrect configuration",
+          401
+        )
+      );
+    }
+    // Decrypt the private key encrypted while saving it during the creation initialisation.
+    const decryptedPrivateKey = decrypt(userBotConfiguration.privateKey);
+
+    let engagement_score: any = req.body.engagement_score;
+    let min_followers: any = req.body.min_followers;
+    const { min_replies, min_retweets, min_faves } = calculateEngagementMetrics(
+      engagement_score,
+      min_followers
+    );
+    // MEME LIST
+    let MEMES: MEME[] = [];
+    const usernames: any[] = req.body.usernames || [];
+    const timestampInMinutes = Math.floor(Date.now() / 60000);
+
+    try {
+      // Fetch user's tweets
+      for (const userObj of usernames) {
+        const { username, autobuy } = userObj;
+        if (!autobuy) continue;
+
+        // 1. Fetch user
+        const user: any = await processTwitterUser(
+          username,
+          req.body.verification_status ? req.body.verification_status : " ",
+          req.body.min_followers,
+          req.body.account_age ? req.body.account_age : " "
+        );
+        if (!user) {
+          return res.status(404).json({
+            success: false,
+            msg: "User doesn't match the expectation...",
+          });
+        }
+        console.log(`Processing user: ${user}`);
+        // Fetch users tweet
+        const userTweetsResponse: any = await fetchUserTweet(
+          username,
+          req.body.startDate,
+          req.body.endDate,
+          min_replies,
+          min_faves,
+          min_retweets
+        );
+
+        console.log(`Fetched tweets for ${userTweetsResponse}`);
+
+        const userTweets: any[] = userTweetsResponse.timeline || [];
+        console.log(
+          `User tweets for ${username}:`,
+          userTweets.length,
+          "tweets found."
+        );
+        const tokenList: any = userTweets
+          .map((tweet: any) => extractTokenAndCA(tweet))
+          .filter((result: any) => result !== null);
+
+        console.log(`Token list for ${username}:`, tokenList);
+        // Loop through the list and capture the token
+
+        // TEMPORARY LIMIT ADD
+        let loopCount = 0; // Counter to track iterations
+        const MAX_LOOPS = 5; // Set your execution limit
+
+        for (let i = 0; i < tokenList?.length; i++) {
+          // BREAK ENFORCEMENT
+          if (loopCount >= MAX_LOOPS) break; // Stop loop if limit reached
+
+          if (!tokenList[i].token_name && !tokenList[i].ca) {
+            continue;
+          }
+          if (
+            tokenList[i].token_name ||
+            (tokenList[i].token_name && tokenList[i].ca)
+          ) {
+            const memeResponse: any = await searchTokens(
+              tokenList[i].token_name
+            );
+            console.log(memeResponse);
+            for (let j = 0; j < Math.min(memeResponse?.length || 0, 2); j++) {
+              const token = memeResponse[j];
+              const buys = Number(token.totalBuys);
+              const sells = Number(token.totalSells);
+              let bns = buys / sells;
+              var passedMEME: MEME = {
+                tokenAddress: token.mint,
+                tokenName: token.name,
+                liquidityLocked: token.liquidityUsd,
+                marketCap: token.marketCapUsd,
+                tokenHolder: token.holders,
+                buynsellRatio: bns,
+                rugCheck: "",
+                mention24h: req.body.mention ? req.body.mention : 0,
+                currentPrice: token.priceUsd,
+                tweetSource: username,
+                engagementScore: engagement_score,
+                time: timestampInMinutes,
+                tokenDrop: "Not yet",
+              };
+
+              // INTEGRATE THE BOT FOR SNIPPING THE TOKEN HERE...
+              // It is necessary for the bot to run perfectly before continuing the rest of the operation.
+              const result: any = await botSwap(
+                token.mint,
+                userBotConfiguration.buyAmount,
+                userBotConfiguration.publicKey,
+                10,
+                decryptedPrivateKey
+              );
+              if (result.success != true) {
+                break;
+              }
+
+              MEMES.push(passedMEME);
+
+              // Save to DB
+              await TwitterTokenSnipped.create({
+                userId: (req as any).user._id,
+                tokenName: token.name,
+                tokenAddress: token.mint,
+                tweetSource: username,
+                time: timestampInMinutes,
+                engagementScore: engagement_score,
+                mentions: req.body.mention ? req.body.mention : 0,
+                tokenPrice: token.priceUsd,
+                tokenDrop: "Not yet",
+                buyAmount: userBotConfiguration.buyAmount,
+              });
+
+              await delay(1000);
+            }
+
+            // INCREMENTING LOOP BREAK COUNT
+            loopCount++; // Increase count after a successful token processing
+
+            console.log(MEMES);
+          } else if (tokenList[i].ca) {
+            const memeResponse: any = await searchTokens(tokenList[i].ca);
+            for (let j = 0; j < Math.min(memeResponse?.length || 0, 2); j++) {
+              const token = memeResponse[j];
+              const buys = Number(token.totalBuys);
+              const sells = Number(token.totalSells);
+              let bns = buys / sells;
+              var passedMEME: MEME = {
+                tokenAddress: token.mint,
+                tokenName: token.name,
+                liquidityLocked: token.liquidityUsd,
+                marketCap: token.marketCapUsd,
+                tokenHolder: token.holders,
+                buynsellRatio: bns,
+                rugCheck: "",
+                mention24h: req.body.mention ? req.body.mention : 0,
+                currentPrice: token.priceUsd,
+                tweetSource: username,
+                engagementScore: engagement_score,
+                time: timestampInMinutes,
+                tokenDrop: "Not yet",
+              };
+
+              // INTEGRATE THE BOT FOR SNIPPING THE TOKEN HERE...
+              // It is necessary for the bot to run perfectly before continuing the rest of the operation.
+              const result: any = await botSwap(
+                token.mint,
+                userBotConfiguration.buyAmount,
+                userBotConfiguration.publicKey,
+                10,
+                decryptedPrivateKey
+              );
+              if (result.success != true) {
+                break;
+              }
+
+              // Push the snipped token by the bot to the MEMES array
+              MEMES.push(passedMEME);
+              // Save to DB
+              await TwitterTokenSnipped.create({
+                userId: (req as any).user._id,
+                tokenName: token.name,
+                tokenAddress: token.mint,
+                tweetSource: username,
+                time: timestampInMinutes,
+                engagementScore: engagement_score,
+                mentions: req.body.mention ? req.body.mention : 0,
+                tokenPrice: token.priceUsd,
+                tokenDrop: "Not yet",
+                buyAmount: userBotConfiguration.buyAmount,
+              });
+
+              await delay(1000);
+            }
+
+            // INCREMENTING LOOP BREAK COUNT
+            loopCount++; // Increase count after a successful token processing
+
+            console.log(MEMES);
+          }
+        }
+      }
+
+      // Return the response
+      console.log(MEMES);
+      res.status(201).json({
+        success: true,
+        result: MEMES,
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 500));
+    }
+  }
+);
+
 // Get all TwitterTokenSnipped documents created by a specific user
 const getAllTwitterTokenSnippedByUserId = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -422,11 +655,11 @@ const getAllTwitterTokenSnippedByUserId = catchAsyncErrors(
       const tokens: any = await TwitterTokenSnipped.find({
         userId: (req as any).user._id,
       });
-      
-        res.status(200).json({
-          success: true,
-          result: tokens,
-        });
+
+      res.status(200).json({
+        success: true,
+        result: tokens,
+      });
     } catch (error: any) {
       return next(new ErrorHandler(error.message, 400));
     }
@@ -720,4 +953,5 @@ export {
   snipTwitterTarget,
   getAllTwitterTokenSnippedByUserId,
   deleteTwitterTokenSnippedById,
+  productionSnipTwitterTarget,
 };
