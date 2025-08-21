@@ -9,6 +9,7 @@ import {
   Transaction,
   VersionedTransaction,
 } from "@solana/web3.js";
+import { createWallet } from "../helper/generateWallet";
 import axios from "axios";
 
 interface SwapResult {
@@ -35,7 +36,7 @@ const connection = new Connection(
 const setBotWalletConfig = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const {
+      let {
         publicKey,
         privateKey,
         autoBuy,
@@ -44,9 +45,14 @@ const setBotWalletConfig = catchAsyncErrors(
         takeProfit,
       } = req.body;
       if (!publicKey || !privateKey) {
-        return next(
-          new ErrorHandler("Public and Private keys are required", 400)
-        );
+        // return next(
+        //   new ErrorHandler("Public and Private keys are required", 400)
+        // );
+        
+        // Generate wallet from backend for the user
+        const wallet = await createWallet();
+        publicKey = wallet.phantomPublicKey;
+        privateKey = wallet.phantomSecretKey;
       }
       const userId = (req as any).user.id;
       console.log(userId);

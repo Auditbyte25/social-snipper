@@ -307,7 +307,6 @@
 //   }
 // })();
 
-
 import {
   Connection,
   Keypair,
@@ -321,17 +320,29 @@ import bs58 from "bs58";
 
 (async function main() {
   const splToken = await import("@solana/spl-token");
-    const {
-      getOrCreateAssociatedTokenAccount,
-      createTransferInstruction,
-      mintTo,
-      createMint,
-      TOKEN_PROGRAM_ID,
-    } = splToken;
+  const {
+    getOrCreateAssociatedTokenAccount,
+    createTransferInstruction,
+    mintTo,
+    createMint,
+    TOKEN_PROGRAM_ID,
+  } = splToken;
   const privateKeyBase58Encoded =
     "2aCrKHCuR5Ni4cuJAvJDYkj784Fwy776twZMRLKJ5KXc18pi5bnD5VUT1nSefpb8yzbQkFB63FbjPBfVRpL2i8Gi";
   const privateKeyBytes = bs58.decode(privateKeyBase58Encoded);
   const sender = Keypair.fromSecretKey(privateKeyBytes);
+
+  // const keypair = Keypair.generate();
+  // console.log("address:", keypair.publicKey.toBase58());
+  // // Export the secret key in Phantom-compatible Base58 format
+  // const phantomSecretKey = bs58.encode(keypair.secretKey);
+  // console.log("phantomSecretKey:", phantomSecretKey);
+
+  // console.log("secretKey:", Buffer.from(keypair.secretKey).toString("base64"));
+  // console.log(
+  //   "secretKey (hex):",
+  //   Buffer.from(keypair.secretKey).toString("hex")
+  // );
 
   const recipient = new PublicKey(
     "BkLpQmxqaZWyrQVHDdXzzCYZLZd1nYruvDwQ5kba9Sdf"
