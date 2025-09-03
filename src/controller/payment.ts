@@ -24,10 +24,12 @@ const subscriptionPlan = catchAsyncErrors(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       // plan should be basic or pro
-      const { signature, plan, referralCode } = req.body;
+      const { signature, plan, referralCode, publicKey } = req.body;
 
       // Check whether user has subscribed before
-      const user: any = await User.findById((req as any).user.id);
+      // const user: any = await User.findById((req as any).user.id);
+
+      const user: any = await User.find({ publicKey: publicKey });
       let isUserSubscribed: any = await UserSubscription.findOne({
         userId: (req as any).user.id,
       });
